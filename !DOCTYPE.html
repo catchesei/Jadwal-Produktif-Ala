@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Produktif Interaktif</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Visualization & Content Choices:
+        - Report Title: Main H1 heading. Goal: Inform.
+        - Schedule Data (Waktu, Kegiatan from source): Dynamically rendered HTML tables using JavaScript, styled with Tailwind. Each tab (Senin-Kamis, Jumat, Sabtu-Minggu) displays its respective table. Goal: Inform. Interaction: View content based on tab selection.
+        - Navigation: Interactive buttons for tab switching. JavaScript handles click events to show/hide relevant schedule content. Goal: Organize/Navigate. Interaction: Click.
+        - Catatan (Notes from source): Displayed as a static list in a dedicated section. Goal: Inform.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-button.active {
+            background-color: #14B8A6; /* teal-500 */
+            color: white;
+        }
+        .tab-button {
+            transition: background-color 0.3s ease;
+        }
+        .table-container {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        /* Custom scrollbar for webkit browsers */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center py-8 px-4">
+
+    <div class="container mx-auto w-full max-w-4xl bg-white p-6 sm:p-8 rounded-xl shadow-2xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-teal-600">📅 Jadwal Produktif Anda</h1>
+            <p class="mt-3 text-gray-600 text-sm sm:text-base">
+                Selamat datang di Penjelajah Jadwal Produktif Anda! Aplikasi ini dirancang untuk membantu Anda memvisualisasikan dan mengelola jadwal "Cuan Mengalir, Otak Ga Ngebug". Gunakan tombol navigasi di bawah untuk beralih antara periode jadwal yang berbeda dan lihat bagaimana setiap menit direncanakan untuk produktivitas dan keseimbangan.
+            </p>
+        </header>
+
+        <nav class="mb-8">
+            <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-2 md:space-x-3">
+                <button id="btn-senin-kamis" class="tab-button active w-full sm:w-auto text-sm sm:text-base font-medium py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-teal-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50">Senin – Kamis</button>
+                <button id="btn-jumat" class="tab-button w-full sm:w-auto text-sm sm:text-base font-medium py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-teal-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50">Jumat</button>
+                <button id="btn-sabtu-minggu" class="tab-button w-full sm:w-auto text-sm sm:text-base font-medium py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-teal-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50">Sabtu – Minggu</button>
+            </div>
+        </nav>
+
+        <main id="schedule-content" class="mb-8">
+            <div id="content-senin-kamis" class="schedule-period">
+                <h2 class="text-2xl font-semibold text-teal-700 mb-4 text-center">Jadwal Senin – Kamis</h2>
+                <div class="table-container shadow-md rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kegiatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-senin-kamis" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="content-jumat" class="schedule-period hidden">
+                <h2 class="text-2xl font-semibold text-teal-700 mb-4 text-center">Jadwal Jumat</h2>
+                 <div class="table-container shadow-md rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kegiatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-jumat" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="content-sabtu-minggu" class="schedule-period hidden">
+                <h2 class="text-2xl font-semibold text-teal-700 mb-4 text-center">Jadwal Sabtu – Minggu</h2>
+                 <div class="table-container shadow-md rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                                <th scope="col" class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kegiatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body-sabtu-minggu" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <section id="notes-section" class="bg-teal-50 p-4 sm:p-6 rounded-lg shadow">
+            <h3 class="text-xl font-semibold text-teal-700 mb-3">📌 Catatan Penting:</h3>
+            <ul id="notes-list" class="list-disc list-inside text-gray-700 space-y-1 text-sm sm:text-base">
+            </ul>
+        </section>
+
+        <footer class="text-center mt-10 pt-6 border-t border-gray-200">
+            <p class="text-xs text-gray-500">&copy; 2024 Penjelajah Jadwal Produktif. Dibuat untuk Anda.</p>
+        </footer>
+    </div>
+
+    <script>
+        const schedules = {
+            'senin-kamis': [
+                { time: '04.00 - 05.30', activity: 'Bangun, sholat subuh, masak, setrika, siap-siap 💪🛐🍳' },
+                { time: '05.30 - 06.45', activity: 'Sarapan / persiapan berangkat' },
+                { time: '07.00 - 16.00', activity: 'MAGANG 📑 (makan siang jam 12)' },
+                { time: '16.00 - 16.30', activity: 'Pulang, mandi, snack bentar 🚿🍪' },
+                { time: '16.30 - 17.00', activity: 'Belajar bahasa (30 menit) 📖' },
+                { time: '17.00 - 18.00', activity: 'Makan malam + sholat maghrib 🍛🛐' },
+                { time: '18.00 - 19.00', activity: 'Edit CV / cari freelance / LinkedIn 💌' },
+                { time: '19.00 - 19.30', activity: 'Ngulik writer / baca artikel psikologi / sosial 📖📝' },
+                { time: '19.30 - 20.00', activity: 'Sholat isya + minum teh hangat 🍵✨' },
+                { time: '20.00 - 21.00', activity: 'Latihan portfolio (design / artikel / project) 🎨💻' },
+                { time: '21.00 - Fleksibel', activity: 'Tidur / istirahat 📱🛌' }
+            ],
+            'jumat': [
+                { time: '04.00 - 05.30', activity: 'Bangun, sholat subuh, masak, setrika, siap-siap' },
+                { time: '05.30 - 06.45', activity: 'Sarapan / beres-beres' },
+                { time: '07.00 - 16.30', activity: 'MAGANG 📑' },
+                { time: '16.30 - 17.00', activity: 'Pulang, mandi, snack bentar 🚿🍪' },
+                { time: '17.00 - 18.00', activity: 'Makan malam + sholat maghrib 🍛🛐' },
+                { time: '18.00 - 19.00', activity: 'Cari kerja freelance / update portfolio 📄' },
+                { time: '19.00 - 20.00', activity: 'Writer / psikologi sosial research 📖' },
+                { time: '20.00 - 21.00', activity: 'Planning weekend + sholat isya 📓🛐' },
+                { time: '21.00 - Fleksibel', activity: 'Tidur / lanjut kerja kalo mood 📱💻' }
+            ],
+            'sabtu-minggu': [
+                { time: '04.00 - 05.30', activity: 'Sholat subuh + journaling ringan' },
+                { time: '05.30 - 06.30', activity: 'Belajar bahasa / baca psikologi sosial 📖' },
+                { time: '06.30 - 07.30', activity: 'Nulis artikel / ngulik writer ✍️' },
+                { time: '07.30 - 08.30', activity: 'Sarapan / stretching 🍽️🧘‍♂️' },
+                { time: '08.30 - 10.00', activity: 'Laporan magang 📑' },
+                { time: '10.00 - 11.00', activity: 'Latihan portfolio / freelance project' },
+                { time: '11.00 - 12.00', activity: 'Cari & apply kerja / freelance 💌' },
+                { time: '12.00 - 13.00', activity: 'Makan siang + sholat' },
+                { time: '13.00 - 14.00', activity: 'Writer / artikel riset / video edukasi' },
+                { time: '14.00 - 15.00', activity: 'Edit CV, LinkedIn, portfolio 📄' },
+                { time: '15.00 - 16.00', activity: 'Belajar bahasa / psikologi santai 📚' },
+                { time: '16.00 - 17.00', activity: 'Sholat + snack' },
+                { time: '17.00 - 18.00', activity: 'Review progress mingguan 📈' },
+                { time: '18.00 - 19.00', activity: 'Makan malam + sholat maghrib' },
+                { time: '19.00 - 21.00', activity: 'Free time produktif (baca artikel, research kerja luar negeri, nulis ide project)' },
+                { time: '21.00 - Fleksibel', activity: 'Tidur 🛌' }
+            ]
+        };
+
+        const notesData = [
+            "Weekday productive malem",
+            "Weekend all out produktif dari pagi sampe malam, tetep sholat & makan",
+            "Chill diganti jadi productive leisure"
+        ];
+
+        function populateTable(periodKey, tableBodyId) {
+            const tableBody = document.getElementById(tableBodyId);
+            tableBody.innerHTML = '';
+            schedules[periodKey].forEach(item => {
+                const row = tableBody.insertRow();
+                const cellTime = row.insertCell();
+                const cellActivity = row.insertCell();
+                cellTime.textContent = item.time;
+                cellActivity.textContent = item.activity;
+                cellTime.className = 'px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+                cellActivity.className = 'px-4 sm:px-6 py-4 text-sm text-gray-700';
+            });
+        }
+
+        function populateNotes() {
+            const notesList = document.getElementById('notes-list');
+            notesList.innerHTML = '';
+            notesData.forEach(note => {
+                const listItem = document.createElement('li');
+                listItem.textContent = note;
+                notesList.appendChild(listItem);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            populateTable('senin-kamis', 'table-body-senin-kamis');
+            populateTable('jumat', 'table-body-jumat');
+            populateTable('sabtu-minggu', 'table-body-sabtu-minggu');
+            populateNotes();
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const schedulePeriods = document.querySelectorAll('.schedule-period');
+
+            function switchTab(activeButtonId, activeContentId) {
+                tabButtons.forEach(button => {
+                    button.classList.remove('active');
+                    if (button.id === activeButtonId) {
+                        button.classList.add('active');
+                    }
+                });
+                schedulePeriods.forEach(period => {
+                    period.classList.add('hidden');
+                    if (period.id === activeContentId) {
+                        period.classList.remove('hidden');
+                    }
+                });
+            }
+
+            document.getElementById('btn-senin-kamis').addEventListener('click', () => {
+                switchTab('btn-senin-kamis', 'content-senin-kamis');
+            });
+            document.getElementById('btn-jumat').addEventListener('click', () => {
+                switchTab('btn-jumat', 'content-jumat');
+            });
+            document.getElementById('btn-sabtu-minggu').addEventListener('click', () => {
+                switchTab('btn-sabtu-minggu', 'content-sabtu-minggu');
+            });
+
+            // Initialize with the first tab active
+            switchTab('btn-senin-kamis', 'content-senin-kamis');
+        });
+    </script>
+</body>
+</html>
